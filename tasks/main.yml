@@ -1,0 +1,16 @@
+---
+- name: Create snapshop of target host system volume
+  local_action: ec2_snapshot
+  args:
+    instance_id: "{{ hostvars[inventory_hostname].ec2_id }}"
+    device_name: "{{ hostvars[inventory_hostname].ec2_root_device_name }}"
+    description: "{{ hostvars[inventory_hostname].ec2_tag_Name }}-{{ lookup('pipe', 'date +%Y-%m-%d-%H-%M-%S') }}"
+    wait: yes
+    region: "{{ aws_region }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    snapshot_tags:
+        Owner: "{{ owner }}"
+        Source: "{{ hostvars[inventory_hostname].ec2_root_device_name }}"
+        Instance: "{{ hostvars[inventory_hostname].ec2_id }}"
+        InstanceName: "{{ hostvars[inventory_hostname].ec2_tag_Name }}"
