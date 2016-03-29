@@ -1,16 +1,46 @@
 ---
-- name: Create snapshop of target host system volume
-  local_action: ec2_snapshot
-  args:
+- ec2_remote_facts:
+    region: "{{ region }}"
+    filters:
+      instance-state-name: running
+      "tag:Stack": "{{ stack }}"
+      "tag:Mode": "{{ mode }}"
+  register: ec2search
+
+- name: Normalize variables
+  set_fact:
+    instance_id: "{{ item.id }}"
+    device_name: "/dev/xvda"
+    description: "{{ item.tags.Name }}-{{ lookup('pipe', 'date +%Y-%m-%d-%H-%M-%S') }}"
+    tag_Source: "/dev/xvda"
+    tag_Instance: "{{ item.id }}"
+    tag_InstanceName: "{{ item.tags.Name }}"
+  with_items: "{{ ec2search.instances }}"
+  when: ec2search.instances is defined
+
+- name: Normalize variables
+  set_fact:
     instance_id: "{{ hostvars[inventory_hostname].ec2_id }}"
     device_name: "{{ hostvars[inventory_hostname].ec2_root_device_name }}"
     description: "{{ hostvars[inventory_hostname].ec2_tag_Name }}-{{ lookup('pipe', 'date +%Y-%m-%d-%H-%M-%S') }}"
+    tag_Source: "{{ hostvars[inventory_hostname].ec2_root_device_name }}"
+    tag_Instance: "{{ hostvars[inventory_hostname].ec2_id }}"
+    tag_InstanceName: "{{ hostvars[inventory_hostname].ec2_tag_Name }}"
+  when: instance_id is undefined
+
+- name: Create snapshop of target host system volume
+  local_action: ec2_snapshot
+  args:
+    instance_id: "{{ instance_id }}"
+    device_name: "{{ device_name }}"
+    description: "{{ description }}"
     wait: yes
-    region: "{{ aws_region }}"
+    region: "{{ region }}"
     aws_access_key: "{{ aws_access_key }}"
     aws_secret_key: "{{ aws_secret_key }}"
     snapshot_tags:
         Owner: "{{ owner }}"
-        Source: "{{ hostvars[inventory_hostname].ec2_root_device_name }}"
-        Instance: "{{ hostvars[inventory_hostname].ec2_id }}"
-        InstanceName: "{{ hostvars[inventory_hostname].ec2_tag_Name }}"
+        Source: "{{ tag_Source }}"
+        Instance: "{{ tag_Instance }}"
+        InstanceName: "{{ tag_InstanceName }}"
+  when: instance_id is defined
