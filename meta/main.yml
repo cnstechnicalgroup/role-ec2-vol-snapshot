@@ -1,1 +1,10 @@
 ---
+galaxy_info:
+  author: cnstechnicalgroup
+  description: Ansible role to create EC2 EBS Vol snapshot for a specified instance 
+  company: CNS Technical Group, Inc.
+  license: GPL2
+  min_ansible_version: 1.8
+  categories:
+  - cloud
+dependencies: []
