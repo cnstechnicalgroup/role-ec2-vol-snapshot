@@ -29,15 +29,12 @@
   when: instance_id is undefined
 
 - name: Create snapshop of target host system volume
-  local_action: ec2_snapshot
-  args:
+  ec2_snapshot:
     instance_id: "{{ instance_id }}"
     device_name: "{{ device_name }}"
     description: "{{ description }}"
     wait: yes
     region: "{{ region }}"
-    aws_access_key: "{{ aws_access_key }}"
-    aws_secret_key: "{{ aws_secret_key }}"
     snapshot_tags:
         Owner: "{{ owner }}"
         Source: "{{ tag_Source }}"
